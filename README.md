@@ -7,8 +7,8 @@ not want to stay next to the terminal. LoudCLI can play a sound when work has
 been running for a while, alert you when a long task finishes, and optionally
 send a Telegram notification so you can step away from the computer.
 
-The default sound packs are GLaDOS and JARVIS, but the project is intended to be
-personal. Replace the sounds with anything you want. Sites like
+The default sound pack is GLaDOS, but the project is intended to be personal.
+Replace the sounds with anything you want. Sites like
 [Myinstants](https://www.myinstants.com/) are a good source for short audio clips.
 
 ## Features
@@ -18,7 +18,7 @@ personal. Replace the sounds with anything you want. Sites like
 - Optional Telegram notification when a long task finishes.
 - Session start and session end sounds where the agent exposes those hooks.
 - Hook examples for Claude Code, Google Antigravity, and Codex.
-- GLaDOS and JARVIS sound packs.
+- GLaDOS sound pack.
 
 ## Supported Agents
 
@@ -58,7 +58,7 @@ Then copy the scripts and sounds for the agent you use.
 ```bash
 AGENT_HOME="$HOME/.claude"
 mkdir -p "$AGENT_HOME/hooks/sounds"
-cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
+cp -r sounds/GLaDOS "$AGENT_HOME/hooks/sounds/"
 cp "claude code"/* "$AGENT_HOME/hooks/"
 chmod +x "$AGENT_HOME"/hooks/*.sh
 ```
@@ -76,7 +76,7 @@ For a global install:
 ```bash
 AGENT_HOME="$HOME/.gemini/config"
 mkdir -p "$AGENT_HOME/hooks/sounds"
-cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
+cp -r sounds/GLaDOS "$AGENT_HOME/hooks/sounds/"
 cp antigravity/*.sh "$AGENT_HOME/hooks/"
 cp antigravity/hooks.json "$AGENT_HOME/hooks.json"
 chmod +x "$AGENT_HOME"/hooks/*.sh
@@ -95,7 +95,7 @@ For a global install:
 ```bash
 AGENT_HOME="$HOME/.codex"
 mkdir -p "$AGENT_HOME/hooks/sounds"
-cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
+cp -r sounds/GLaDOS "$AGENT_HOME/hooks/sounds/"
 cp codex/*.sh "$AGENT_HOME/hooks/"
 cp codex/hooks.json "$AGENT_HOME/hooks.json"
 chmod +x "$AGENT_HOME"/hooks/*.sh
@@ -195,7 +195,6 @@ files to a format supported by your player.
 | `codex/` | Codex hook scripts and config |
 | `hooks.json` | High-level hook example catalog |
 | `sounds/GLaDOS/` | Default GLaDOS sound pack |
-| `sounds/JARVIS/` | Alternative JARVIS sound pack |
 | `README.md` | Project documentation |
 
 ## License
