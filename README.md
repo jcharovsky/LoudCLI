@@ -3,10 +3,9 @@
 LoudCLI adds personalized sound cues and Telegram alerts to coding agent CLIs.
 
 It is built for the common case where you leave an agent working on a task and do
-not want to stay next to the terminal. LoudCLI can play a sound when a session
-starts, when a task has been running for a while, and when a long task finishes.
-For longer runs, it can also send a Telegram notification so you know the agent is
-done even if you left the room or stepped away completely.
+not want to stay next to the terminal. LoudCLI can play a sound when work has
+been running for a while, alert you when a long task finishes, and optionally
+send a Telegram notification so you can step away from the computer.
 
 The default sound packs are GLaDOS and JARVIS, but the project is intended to be
 personal. Replace the sounds with anything you want. Sites like
@@ -14,36 +13,34 @@ personal. Replace the sounds with anything you want. Sites like
 
 ## Features
 
-- Sound cue when an agent session starts.
-- Sound cue when an agent session ends.
 - Delayed "task started" sound for prompts that keep running past 10 seconds.
 - "Task finished" sound for runs that take at least 1 minute.
 - Optional Telegram notification when a long task finishes.
-- Includes hook examples for Claude Code and Gemini CLI.
-- Ships with GLaDOS and JARVIS sound packs.
+- Session start and session end sounds where the agent exposes those hooks.
+- Hook examples for Claude Code, Google Antigravity, and Codex.
+- GLaDOS and JARVIS sound packs.
 
 ## Supported Agents
 
 LoudCLI currently includes hook scripts for:
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+- [Google Antigravity](https://antigravity.google/docs/hooks)
+- [Codex](https://developers.openai.com/codex/hooks)
 
 The project is just shell scripts, audio files, and hook configuration, so it can
 be adapted to other agent CLIs that support lifecycle hooks.
 
-## How It Works
+## Hook Coverage
 
-LoudCLI connects to your agent's hook system:
+| Agent | Session start | Session end | Task start | Task finish |
+| --- | --- | --- | --- | --- |
+| Claude Code | Yes | Yes | Yes | Yes |
+| Antigravity | No documented hook | No documented hook | Yes | Yes |
+| Codex | Yes | No documented hook | Yes | Yes |
 
-| Event | Default behavior |
-| --- | --- |
-| Session start | Plays `Hello` sound |
-| Session end | Plays `Bye` sound |
-| Task start | Plays `Start` sound if the task is still running after 10 seconds |
-| Task finish | Plays `Finish` sound and sends Telegram if the task took at least 1 minute |
-
-The delay thresholds avoid noisy alerts for quick prompts.
+Task start plays after 10 seconds so quick prompts stay quiet. Task finish plays
+only for runs that take at least 1 minute.
 
 ## Installation
 
@@ -54,60 +51,71 @@ git clone <repo-url> LoudCLI
 cd LoudCLI
 ```
 
-Choose the agent you want to configure.
+Then copy the scripts and sounds for the agent you use.
 
-For Claude Code:
+### Claude Code
 
 ```bash
 AGENT_HOME="$HOME/.claude"
-SCRIPT_DIR="claude code"
-```
-
-For Gemini CLI:
-
-```bash
-AGENT_HOME="$HOME/.gemini"
-SCRIPT_DIR="gemini"
-```
-
-Copy the hooks and sounds:
-
-```bash
 mkdir -p "$AGENT_HOME/hooks/sounds"
 cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
-cp "$SCRIPT_DIR"/* "$AGENT_HOME/hooks/"
+cp "claude code"/* "$AGENT_HOME/hooks/"
 chmod +x "$AGENT_HOME"/hooks/*.sh
 ```
 
-## Configure Hooks
+Merge the `claude-code.hooks` object from `hooks.json` into
+`~/.claude/settings.json`.
 
-Open `hooks.json` and copy the matching configuration into your agent settings
-file:
+### Antigravity
 
-- Claude Code: `~/.claude/settings.json`
-- Gemini CLI: `~/.gemini/settings.json`
+Antigravity loads hooks from a `hooks.json` file in a customization directory,
+such as `~/.gemini/config/` or a workspace `.agents/` directory.
 
-If your settings file already has a `hooks` object, merge the LoudCLI entries
-into it instead of replacing the whole file.
+For a global install:
 
-Restart the agent after changing the settings.
+```bash
+AGENT_HOME="$HOME/.gemini/config"
+mkdir -p "$AGENT_HOME/hooks/sounds"
+cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
+cp antigravity/*.sh "$AGENT_HOME/hooks/"
+cp antigravity/hooks.json "$AGENT_HOME/hooks.json"
+chmod +x "$AGENT_HOME"/hooks/*.sh
+```
+
+If you already have Antigravity hooks, merge the top-level entries from
+`antigravity/hooks.json` into your existing `hooks.json`.
+
+### Codex
+
+Codex loads hooks from `~/.codex/hooks.json`, `~/.codex/config.toml`, or a
+trusted project `.codex/` configuration layer.
+
+For a global install:
+
+```bash
+AGENT_HOME="$HOME/.codex"
+mkdir -p "$AGENT_HOME/hooks/sounds"
+cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
+cp codex/*.sh "$AGENT_HOME/hooks/"
+cp codex/hooks.json "$AGENT_HOME/hooks.json"
+chmod +x "$AGENT_HOME"/hooks/*.sh
+```
+
+Codex requires command hooks to be reviewed and trusted before they run. Open
+`/hooks` in Codex after installing or changing the hook definitions.
 
 ## Configure Paths
 
 The included scripts use the GLaDOS sound pack by default. If you install the
-files somewhere else, update the paths in the shell scripts and `hooks.json`.
+files somewhere else, update the paths in the shell scripts and hook config.
 
-For example, Claude Code defaults to:
+Default sound locations:
 
-```bash
-~/.claude/hooks/sounds/GLaDOS/Hello-2.aiff
-~/.claude/hooks/sounds/GLaDOS/Start-2.aiff
-~/.claude/hooks/sounds/GLaDOS/Finish-2.aiff
-~/.claude/hooks/sounds/GLaDOS/Bye-2.aiff
-```
-
-Gemini CLI installs under `~/.gemini`, so make sure any copied scripts point to
-`~/.gemini/hooks/...` when using Gemini.
+| Agent | Default path |
+| --- | --- |
+| Claude Code | `~/.claude/hooks/sounds/GLaDOS/` |
+| Antigravity | `~/.gemini/config/hooks/sounds/GLaDOS/` |
+| Codex | `~/.codex/hooks/sounds/GLaDOS/` |
 
 ## Customize Sounds
 
@@ -123,9 +131,9 @@ Each sound pack uses four files:
 To create a custom pack:
 
 1. Create a new folder under `sounds/`.
-2. Add your four audio files.
+2. Add your audio files.
 3. Copy the folder into your agent hooks sound directory.
-4. Update the hook scripts and `hooks.json` to point at the new files.
+4. Update the hook scripts and hook config to point at the new files.
 
 On macOS, `.aiff`, `.wav`, and many other formats can be played with `afplay`.
 
@@ -183,8 +191,9 @@ files to a format supported by your player.
 | Path | Purpose |
 | --- | --- |
 | `claude code/` | Claude Code hook scripts |
-| `gemini/` | Gemini CLI hook scripts |
-| `hooks.json` | Hook configuration examples |
+| `antigravity/` | Google Antigravity hook scripts and config |
+| `codex/` | Codex hook scripts and config |
+| `hooks.json` | High-level hook example catalog |
 | `sounds/GLaDOS/` | Default GLaDOS sound pack |
 | `sounds/JARVIS/` | Alternative JARVIS sound pack |
 | `README.md` | Project documentation |

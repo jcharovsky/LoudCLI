@@ -1,0 +1,20 @@
+{
+  "loudcli-task-start": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "~/.gemini/config/hooks/on-prompt.sh",
+        "timeout": 5
+      }
+    ]
+  },
+  "loudcli-task-finish": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "~/.gemini/config/hooks/on-stop.sh",
+        "timeout": 30
+      }
+    ]
+  }
+}

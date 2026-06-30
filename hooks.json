@@ -50,56 +50,10 @@
       ]
     }
   },
-  "gemini-cli": {
-    "hooks": {
-      "SessionStart": [
-        {
-          "matcher": "",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "afplay ~/.gemini/hooks/sounds/GLaDOS/Hello-2.aiff",
-              "async": true
-            }
-          ]
-        }
-      ],
-      "SessionEnd": [
-        {
-          "matcher": "exit",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "~/.gemini/hooks/on-exit.sh",
-              "async": true
-            }
-          ]
-        }
-      ],
-      "BeforeAgent": [
-        {
-          "matcher": "",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "~/.gemini/hooks/on-prompt.sh",
-              "async": true
-            }
-          ]
-        }
-      ],
-      "AfterAgent": [
-        {
-          "matcher": "",
-          "hooks": [
-            {
-              "type": "command",
-              "command": "~/.gemini/hooks/on-stop.sh",
-              "async": true
-            }
-          ]
-        }
-      ]
-    }
+  "antigravity": {
+    "copy": "Copy antigravity/hooks.json to ~/.gemini/config/hooks.json or merge its top-level hook definitions into an existing Antigravity hooks.json file."
+  },
+  "codex": {
+    "copy": "Copy codex/hooks.json to ~/.codex/hooks.json or merge its hooks object into an existing Codex hooks.json file."
   }
 }
