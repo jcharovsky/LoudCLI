@@ -1,117 +1,194 @@
-# GLaDOS - AI CLI Sound Hooks + Telegram Notifications
+# LoudCLI
 
-## What This Does
+LoudCLI adds personalized sound cues and Telegram alerts to coding agent CLIs.
 
-Plays GLaDOS-themed audio cues during AI CLI sessions (supports **Claude Code** and **Gemini CLI**) and sends Portal-themed Telegram notifications for long tasks:
+It is built for the common case where you leave an agent working on a task and do
+not want to stay next to the terminal. LoudCLI can play a sound when a session
+starts, when a task has been running for a while, and when a long task finishes.
+For longer runs, it can also send a Telegram notification so you know the agent is
+done even if you left the room or stepped away completely.
 
-| Event | Sound File | Trigger | Telegram |
-|---|---|---|---|
-| Session start | `Hello-2.aiff` | CLI launches | No |
-| Session end | `Bye-2.aiff` | CLI exits | No |
-| Task start | `Start-2.aiff` | User sends a prompt AND AI is still working 10 seconds later | No |
-| Task finish | `Finish-2.aiff` | AI finishes a response AND the task took >= 1 minute | Yes |
+The default sound packs are GLaDOS and JARVIS, but the project is intended to be
+personal. Replace the sounds with anything you want. Sites like
+[Myinstants](https://www.myinstants.com/) are a good source for short audio clips.
 
-The Start/Finish sounds have timing thresholds to avoid playing on quick exchanges. Telegram notifications are sent only for long tasks (>= 1 minute) and include the last assistant message from the session transcript (Claude only).
+## Features
 
-## Setup Instructions
+- Sound cue when an agent session starts.
+- Sound cue when an agent session ends.
+- Delayed "task started" sound for prompts that keep running past 10 seconds.
+- "Task finished" sound for runs that take at least 1 minute.
+- Optional Telegram notification when a long task finishes.
+- Includes hook examples for Claude Code and Gemini CLI.
+- Ships with GLaDOS and JARVIS sound packs.
 
-### Step 1: Choose Your CLI & Copy Files
+## Supported Agents
 
-This repository contains dedicated scripts for different CLIs because their hook engines operate differently.
+LoudCLI currently includes hook scripts for:
 
-**For Claude Code (`~/.claude`):**
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+
+The project is just shell scripts, audio files, and hook configuration, so it can
+be adapted to other agent CLIs that support lifecycle hooks.
+
+## How It Works
+
+LoudCLI connects to your agent's hook system:
+
+| Event | Default behavior |
+| --- | --- |
+| Session start | Plays `Hello` sound |
+| Session end | Plays `Bye` sound |
+| Task start | Plays `Start` sound if the task is still running after 10 seconds |
+| Task finish | Plays `Finish` sound and sends Telegram if the task took at least 1 minute |
+
+The delay thresholds avoid noisy alerts for quick prompts.
+
+## Installation
+
+Clone the repository:
+
 ```bash
-AGENT_HOME=~/.claude
+git clone <repo-url> LoudCLI
+cd LoudCLI
+```
+
+Choose the agent you want to configure.
+
+For Claude Code:
+
+```bash
+AGENT_HOME="$HOME/.claude"
 SCRIPT_DIR="claude code"
 ```
 
-**For Gemini CLI (`~/.gemini`):**
+For Gemini CLI:
+
 ```bash
-AGENT_HOME=~/.gemini
+AGENT_HOME="$HOME/.gemini"
 SCRIPT_DIR="gemini"
 ```
 
-Create the hooks directory and copy everything:
+Copy the hooks and sounds:
+
 ```bash
-mkdir -p ${AGENT_HOME}/hooks/sounds
-cp -r sounds/GLaDOS sounds/JARVIS ${AGENT_HOME}/hooks/sounds/
-cp "${SCRIPT_DIR}/"* ${AGENT_HOME}/hooks/
-chmod +x ${AGENT_HOME}/hooks/*.sh
+mkdir -p "$AGENT_HOME/hooks/sounds"
+cp -r sounds/GLaDOS sounds/JARVIS "$AGENT_HOME/hooks/sounds/"
+cp "$SCRIPT_DIR"/* "$AGENT_HOME/hooks/"
+chmod +x "$AGENT_HOME"/hooks/*.sh
 ```
 
-### Step 2: Update paths inside the shell scripts
+## Configure Hooks
 
-The scripts reference `~/.claude/hooks/sounds/GLaDOS/` (for Claude) or `~/.gemini/hooks/sounds/GLaDOS/` (for Gemini). Ensure the scripts inside your `hooks/` directory point to the correct path based on your installation.
+Open `hooks.json` and copy the matching configuration into your agent settings
+file:
 
-To use JARVIS sounds instead, change `GLaDOS` to `JARVIS` and remove the `-2` suffix from filenames in the scripts and `settings.json`.
+- Claude Code: `~/.claude/settings.json`
+- Gemini CLI: `~/.gemini/settings.json`
 
-If installing on Linux, replace `afplay` with the appropriate audio player (e.g., `paplay`, `aplay`, or `mpv --no-video`).
+If your settings file already has a `hooks` object, merge the LoudCLI entries
+into it instead of replacing the whole file.
 
-### Step 3: Set up Telegram bot
+Restart the agent after changing the settings.
 
-This step enables Telegram notifications for long tasks. If you don't want Telegram notifications, skip this step — the sounds will still work, and the curl command will silently fail with the placeholder values.
+## Configure Paths
 
-1. Open Telegram and message [@BotFather](https://t.me/BotFather)
-2. Send `/newbot` and follow the prompts to create a bot
-3. Copy the bot token (looks like `123456:ABC-DEF...`)
-4. Send any message to your new bot on Telegram
-5. Get your chat ID by running:
-   ```bash
-   curl -s "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates" | python3 -m json.tool
-   ```
-   Look for `"chat": { "id": 123456789 }` in the response.
+The included scripts use the GLaDOS sound pack by default. If you install the
+files somewhere else, update the paths in the shell scripts and `hooks.json`.
 
-6. Edit `${AGENT_HOME}/hooks/on-stop.sh` and replace the placeholder on line 6:
-   ```bash
-   TELEGRAM_BOT_TOKEN="PASTE_BOT_TOKEN_HERE"   # ← replace with your bot token
-   ```
-   The chat ID on line 7 also needs to be replaced with your own.
+For example, Claude Code defaults to:
 
-7. Test by sending a message manually:
-   ```bash
-   curl -s -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage" \
-     -d chat_id="<YOUR_CHAT_ID>" \
-     -d text="Test notification from AI CLI."
-   ```
+```bash
+~/.claude/hooks/sounds/GLaDOS/Hello-2.aiff
+~/.claude/hooks/sounds/GLaDOS/Start-2.aiff
+~/.claude/hooks/sounds/GLaDOS/Finish-2.aiff
+~/.claude/hooks/sounds/GLaDOS/Bye-2.aiff
+```
 
-### Step 4: Merge hooks into settings.json
+Gemini CLI installs under `~/.gemini`, so make sure any copied scripts point to
+`~/.gemini/hooks/...` when using Gemini.
 
-The hooks configuration must be added to your CLI settings file (e.g., `~/.claude/settings.json` or `~/.gemini/settings.json`).
+## Customize Sounds
 
-The provided `hooks.json` file contains two configuration objects: `"claude-code"` and `"gemini-cli"`. 
+Each sound pack uses four files:
 
-**Important differences:**
-- **Claude Code** uses hooks like `UserPromptSubmit` and `Stop`.
-- **Gemini CLI** uses `BeforeAgent`, `AfterAgent`, and requires an idempotent `on-exit.sh` script for `SessionEnd` to prevent multiple audio triggers during shutdown.
+| File | Used for |
+| --- | --- |
+| `Hello` | Agent session started |
+| `Start` | Agent task is taking longer than 10 seconds |
+| `Finish` | Agent task finished after at least 1 minute |
+| `Bye` | Agent session ended |
 
-**To install:**
-1. Open your CLI's `settings.json`.
-2. Locate the appropriate JSON payload for your CLI from the `hooks.json` file.
-3. Merge the `"hooks"` object into your `settings.json` file. If `"hooks"` already exists, append the new arrays without overwriting your other configurations.
+To create a custom pack:
 
-### Step 5: Verify
+1. Create a new folder under `sounds/`.
+2. Add your four audio files.
+3. Copy the folder into your agent hooks sound directory.
+4. Update the hook scripts and `hooks.json` to point at the new files.
 
-Restart your CLI. You should hear `Hello-2.aiff` on launch. To test Telegram, run a task that takes over 1 minute — you should receive a Portal-themed notification on Telegram when it finishes.
+On macOS, `.aiff`, `.wav`, and many other formats can be played with `afplay`.
 
-## File Inventory
+## Telegram Alerts
 
-| File | Purpose |
-|---|---|
-| `sounds/GLaDOS/Hello-2.aiff` | Played on session start |
-| `sounds/GLaDOS/Bye-2.aiff` | Played on session end |
-| `sounds/GLaDOS/Start-2.aiff` | Played when a task exceeds 10 seconds |
-| `sounds/GLaDOS/Finish-2.aiff` | Played when a task exceeds 1 minute |
-| `sounds/JARVIS/` | Alternative JARVIS voice pack |
-| `claude code/on-prompt.sh` | Claude version: schedules Start sound |
-| `claude code/on-stop.sh` | Claude version: handles Finish sound & Telegram |
-| `gemini/on-prompt.sh` | Gemini version: schedules Start sound, outputs JSON |
-| `gemini/on-stop.sh` | Gemini version: handles Finish sound, outputs JSON |
-| `gemini/on-exit.sh` | Gemini version: ensures idempotent Bye sound on exit |
-| `hooks.json` | Contains the hook configurations for both CLIs |
-| `README.md` | This file |
+Telegram notifications are optional. Sounds work without them.
 
-## Platform Requirements
+To enable Telegram:
 
-- **macOS**: Works out of the box (`afplay` and `curl` are built-in)
-- **Linux**: Replace `afplay` with `paplay` (PulseAudio), `aplay` (ALSA), or `mpv --no-video` in all locations.
-- **Windows (WSL)**: Use `powershell.exe -c "(New-Object Media.SoundPlayer 'path/to/file.wav').PlaySync()"` or install `sox` (`play` command). Audio files may need conversion to `.wav`.
+1. Open Telegram and message [@BotFather](https://t.me/BotFather).
+2. Create a bot with `/newbot`.
+3. Copy the bot token.
+4. Send any message to your new bot.
+5. Get your chat ID:
+
+```bash
+curl -s "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates" | python3 -m json.tool
+```
+
+Look for the `chat.id` value in the response.
+
+Then edit your copied `on-stop.sh` file:
+
+```bash
+TELEGRAM_BOT_TOKEN="PASTE_BOT_TOKEN_HERE"
+TELEGRAM_CHAT_ID="PASTE_CHAT_ID_HERE"
+```
+
+Test the bot manually:
+
+```bash
+curl -s -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage" \
+  -d chat_id="<YOUR_CHAT_ID>" \
+  -d text="LoudCLI test notification."
+```
+
+## Platform Notes
+
+LoudCLI is written for macOS by default and uses `afplay`.
+
+For Linux, replace `afplay` in the scripts and hook config with an available
+player such as:
+
+```bash
+paplay
+aplay
+mpv --no-video
+```
+
+For Windows or WSL, use a Windows-compatible audio command or convert the sound
+files to a format supported by your player.
+
+## Repository Layout
+
+| Path | Purpose |
+| --- | --- |
+| `claude code/` | Claude Code hook scripts |
+| `gemini/` | Gemini CLI hook scripts |
+| `hooks.json` | Hook configuration examples |
+| `sounds/GLaDOS/` | Default GLaDOS sound pack |
+| `sounds/JARVIS/` | Alternative JARVIS sound pack |
+| `README.md` | Project documentation |
+
+## License
+
+No license has been added yet.
