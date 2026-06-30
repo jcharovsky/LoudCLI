@@ -37,7 +37,7 @@ be adapted to other agent CLIs that support lifecycle hooks.
 | --- | --- | --- | --- | --- |
 | Claude Code | Yes | Yes | Yes | Yes |
 | Antigravity | No documented hook | No documented hook | Yes | Yes |
-| Codex | Yes | No documented hook | Yes | Yes |
+| Codex | Yes, when the agent thread starts | No documented hook | Yes | Yes |
 
 Task start plays after 10 seconds so quick prompts stay quiet. Task finish plays
 only for runs that take at least 1 minute.
