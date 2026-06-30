@@ -1,0 +1,105 @@
+{
+  "claude-code": {
+    "hooks": {
+      "SessionStart": [
+        {
+          "matcher": "startup",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "afplay ~/.claude/hooks/sounds/GLaDOS/Hello-2.aiff",
+              "async": true
+            }
+          ]
+        }
+      ],
+      "SessionEnd": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "afplay ~/.claude/hooks/sounds/GLaDOS/Bye-2.aiff"
+            }
+          ]
+        }
+      ],
+      "UserPromptSubmit": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "~/.claude/hooks/on-prompt.sh",
+              "async": true
+            }
+          ]
+        }
+      ],
+      "Stop": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "~/.claude/hooks/on-stop.sh",
+              "async": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "gemini-cli": {
+    "hooks": {
+      "SessionStart": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "afplay ~/.gemini/hooks/sounds/GLaDOS/Hello-2.aiff",
+              "async": true
+            }
+          ]
+        }
+      ],
+      "SessionEnd": [
+        {
+          "matcher": "exit",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "~/.gemini/hooks/on-exit.sh",
+              "async": true
+            }
+          ]
+        }
+      ],
+      "BeforeAgent": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "~/.gemini/hooks/on-prompt.sh",
+              "async": true
+            }
+          ]
+        }
+      ],
+      "AfterAgent": [
+        {
+          "matcher": "",
+          "hooks": [
+            {
+              "type": "command",
+              "command": "~/.gemini/hooks/on-stop.sh",
+              "async": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
